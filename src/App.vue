@@ -1,11 +1,68 @@
+<script setup>
+import {Loader} from './components/loader';
+import {KEY_TOKEN, SECRET_TOKEN, DESCRIPTION_TOKEN, STYLE_TOKEN, styles} from './core/constants';
+</script>
 
-const KEY_TOKEN = "KEY_TOKEN";
-const SECRET_TOKEN = "SECRET_TOKEN";
-const DESCRIPTION_TOKEN = "DESCRIPTION_TOKEN";
-const STYLE_TOKEN = "STYLE_TOKEN";
+<template>
+  <div class="content">
+    <form class="container p-4 border-end border-secondary-subtle">
+      <details v-bind:open="isAPISettingsOpened">
+        <summary class="mb-2">API Settings</summary>
+        <div class="row mb-3 form-floating">
+          <input class="form-control" placeholder="key" id="keyControl" v-model="key" type="password" autocomplete="off">
+          <label for="keyControl">Key</label>
+        </div>
+        <div class="row mb-3 form-floating">
+          <input class="form-control" placeholder="secret" id="secretControl" v-model="secret" type="password" autocomplete="off">
+          <label for="secretControl">Secret</label>
+        </div>
+        <div class="row mb-2">
+          <div class="col-12 d-flex justify-content-between">
+            <button type="button" class="btn btn-danger" v-bind:disabled="!(key && secret)" @click="saveKeys">Save to Local Storage</button>
+            <button type="button" class="btn btn-primary" v-if="hasStoredKeys" @click="clearKeys">Clear Keys</button>
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-12 form-text">
+            You don't have to store the keys.
+          </div>
+        </div>
+      </details>
+      <div class="row mb-1">
+        <label class="col-12 col-form-label">Style:</label>
+      </div>
+      <div class="row mb-3">
+        <div class="col-12">
+          <div class="form-check" v-for="s in styles">
+            <input class="form-check-input" type="radio" :value="s" v-model="style" v-bind:id="'style_' + s">
+            <label class="form-check-label" v-bind:for="'style_' + s">
+              {{ s }}
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="row mb-3 form-floating">
+        <textarea class="form-control" placeholder="Description" v-model="description" id="description"
+          rows="10"></textarea>
+        <label for="description">Description</label>
+      </div>
+      <div class="row mb-3">
+        <button type="button" class="btn btn-success" v-on:click="submit" v-bind:disabled="isLoading">Generate</button>
+      </div>
+      <div class="row mb-3">
+        <button type="button" class="btn btn-info" v-on:click="copyImageToClipboard" v-bind:disabled="isLoading">{{
+          isCopyToClipboardSuccessfully ? 'Copied!' : 'Copy to Clipboard' }}</button>
+      </div>
+    </form>
+    <div class="d-flex justify-content-center align-items-center">
+      <canvas class="border border-secondary-subtle" ref="canvas" id="canvas" height="800px" width="800px"></canvas>
+    </div>
+  </div>
+</template>
 
-const App = {
-    data() {
+<script>
+export default {
+  data() {
         const styles = [
             "UHD",
             "KANDINSKY",
@@ -22,6 +79,7 @@ const App = {
             secret: "",
             isAPISettingsOpened: true,
             isCopyToClipboardSuccessfully: false,
+            hasStoredKeys: false
         }
     },
     mounted() {
@@ -32,6 +90,7 @@ const App = {
         this.key = localStorage.getItem(KEY_TOKEN) ?? "";
         this.secret = localStorage.getItem(SECRET_TOKEN) ?? "";
         this.isAPISettingsOpened = !(this.key || this.secret);
+        this.updateHasStoredKeys();
     },
     methods: {
         setLoading(value) {
@@ -43,12 +102,17 @@ const App = {
         saveKeys() {
             localStorage.setItem(KEY_TOKEN, this.key);
             localStorage.setItem(SECRET_TOKEN, this.secret);
+            this.updateHasStoredKeys();
         },
         clearKeys() {
             localStorage.removeItem(KEY_TOKEN);
             localStorage.removeItem(SECRET_TOKEN);
             this.key = "";
             this.secret = "";
+            this.updateHasStoredKeys();
+        },
+        updateHasStoredKeys() {
+          this.hasStoredKeys = !!(this.key || this.secret);
         },
         getAccessHeaders() {
             return {
@@ -148,5 +212,16 @@ const App = {
         }
     },
 }
+</script>
 
-Vue.createApp(App).mount('#app')
+<style scoped>
+.content {
+  display: grid;
+  grid-template-columns: 340px auto;
+  column-gap: 24px;
+
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+</style>

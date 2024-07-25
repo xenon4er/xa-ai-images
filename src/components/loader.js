@@ -74,7 +74,7 @@ class Circle {
 }
 
 
-class Loader {
+export class Loader {
     /**
      * @param {HTMLCanvasElement} canvas
      */
