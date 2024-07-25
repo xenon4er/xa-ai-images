@@ -52,7 +52,7 @@
                 <button type="button" class="btn btn-info" v-on:click="copyImageToClipboard" v-bind:disabled="isLoading">{{isCopyToClipboardSuccessfully ? 'Copied!' : 'Copy to Clipboard'}}</button>
             </div>
         </div>
-        <div class="align-content-center text-center">
+        <div class="d-flex justify-content-center align-items-center">
             <canvas ref="canvas" id="canvas" height="800px" width="800px"></canvas>
         </div>
     </div>
