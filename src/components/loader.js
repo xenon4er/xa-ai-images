@@ -37,7 +37,6 @@ class Circle {
             }
         }
 
-
         const grid = [];
         for (let r = 0; r < rows; r++) {
             grid.push([]);
@@ -73,16 +72,17 @@ class Circle {
     }
 }
 
-
 export class Loader {
     /**
      * @param {HTMLCanvasElement} canvas
      */
-    constructor(canvas) {
+    constructor(canvas, totalAttempts) {
         this.canvas = canvas;
         this.context = this.canvas.getContext("2d");
         this.canvasWidth = this.canvas.width;
         this.canvasHeight = this.canvas.height;
+        this.totalAttempts = totalAttempts;
+        this.attempt = 0;
 
         /**
          * Stores current animation frame id
@@ -91,7 +91,6 @@ export class Loader {
          */
         this.animationId = null;
     }
-
 
     showLoading() {
         if (this.animationId) {
@@ -106,9 +105,24 @@ export class Loader {
         this.animationId = null;
     }
 
+    setAttempt(value) {
+        this.attempt = value;
+    }
+
+    drawAttempts = () => {
+        this.context.fillStyle = "rgba(100 100 100 / 100%)";
+        this.context.font = "90px serif";
+        this.context.textAlign = "center";
+        this.context.strokeStyle = "rgba(10 10 10 / 100%)";
+        const text = `Attempt ${this.attempt} out of ${this.totalAttempts}`;
+        this.context.fillText(text, this.canvasHeight / 2, this.canvasWidth / 2);
+        this.context.strokeText(text, this.canvasHeight / 2, this.canvasWidth / 2);
+    }
+
     draw = () => {
         this.context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
         this.circles.forEach(c => c.draw(this.context));
+        this.drawAttempts();
 
         this.animationId = window.requestAnimationFrame(this.draw);
     }
