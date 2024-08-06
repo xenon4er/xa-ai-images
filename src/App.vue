@@ -1,106 +1,127 @@
 <script setup>
 import { Loader } from './components/loader';
+import debounce from "lodash/debounce";
 import { KEY_TOKEN, SECRET_TOKEN, DESCRIPTION_TOKEN, STYLE_TOKEN, styles } from './core/constants';
 </script>
 
 <template>
-  <div class="content">
-    <form class="container p-4 border-end border-secondary-subtle">
-      <details v-bind:open="isAPISettingsOpened">
-        <summary class="mb-2">API Settings</summary>
-
-        <div class="row mb-3">
-          <div class="col-12">
-            <a class="icon-link" title="Step-by-step guide on API key management" href="https://fusionbrain.ai/docs/doc/poshagovaya-instrukciya-po-upravleniu-api-kluchami/" target="_blank">
-              How to create keys
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5"/>
-                <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0z"/>
-              </svg>
-            </a>
+  <div class="container-fluid h-100">
+    <div class="row h-100">
+      <div class="col-12 col-sm-12 col-lg-4 col-xl-3">
+        <form class="container p-4">
+          <details v-bind:open="isAPISettingsOpened">
+            <summary class="mb-2">API Settings</summary>
+            <div class="row mb-3">
+              <div class="col-12">
+                <a class="icon-link" title="Step-by-step guide on API key management"
+                  href="https://fusionbrain.ai/docs/doc/poshagovaya-instrukciya-po-upravleniu-api-kluchami/"
+                  target="_blank">
+                  How to create keys
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                    class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd"
+                      d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5" />
+                    <path fill-rule="evenodd"
+                      d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0z" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+            <div class="row mb-3 form-floating">
+              <input class="form-control" placeholder="key" id="keyControl" v-model="key" type="password"
+                autocomplete="off">
+              <label for="keyControl">Key</label>
+            </div>
+            <div class="row mb-3 form-floating">
+              <input class="form-control" placeholder="secret" id="secretControl" v-model="secret" type="password"
+                autocomplete="off">
+              <label for="secretControl">Secret</label>
+            </div>
+            <div class="row mb-2">
+              <div class="col-12 d-flex justify-content-between">
+                <button type="button" class="btn btn-danger" v-bind:disabled="!(key && secret)" @click="saveKeys">Save
+                  to
+                  Local Storage</button>
+                <button type="button" class="btn btn-primary" v-if="hasStoredKeys" @click="clearKeys">Clear
+                  Keys</button>
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-12 form-text">
+                You don't have to store the keys.
+              </div>
+            </div>
+          </details>
+          <div class="row mb-1">
+            <label class="col-12 col-form-label">Style:</label>
           </div>
-        </div>
-
-        <div class="row mb-3 form-floating">
-          <input class="form-control" placeholder="key" id="keyControl" v-model="key" type="password"
-            autocomplete="off">
-          <label for="keyControl">Key</label>
-        </div>
-        <div class="row mb-3 form-floating">
-          <input class="form-control" placeholder="secret" id="secretControl" v-model="secret" type="password"
-            autocomplete="off">
-          <label for="secretControl">Secret</label>
-        </div>
-        <div class="row mb-2">
-          <div class="col-12 d-flex justify-content-between">
-            <button type="button" class="btn btn-danger" v-bind:disabled="!(key && secret)" @click="saveKeys">Save to
-              Local Storage</button>
-            <button type="button" class="btn btn-primary" v-if="hasStoredKeys" @click="clearKeys">Clear Keys</button>
+          <div class="row mb-3">
+            <div class="col-12">
+              <div class="form-check" v-for="s in styles">
+                <input class="form-check-input" type="radio" :value="s" v-model="style" v-bind:id="'style_' + s">
+                <label class="form-check-label" v-bind:for="'style_' + s">
+                  {{ s }}
+                </label>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="row mb-3">
-          <div class="col-12 form-text">
-            You don't have to store the keys.
+          <div class="row mb-3 form-floating">
+            <textarea class="form-control" placeholder="Description" v-model="description" id="description" rows="10"
+              @keyup.ctrl.enter="submit"></textarea>
+            <label for="description">Description</label>
           </div>
-        </div>
-      </details>
-      <div class="row mb-1">
-        <label class="col-12 col-form-label">Style:</label>
-      </div>
-      <div class="row mb-3">
-        <div class="col-12">
-          <div class="form-check" v-for="s in styles">
-            <input class="form-check-input" type="radio" :value="s" v-model="style" v-bind:id="'style_' + s">
-            <label class="form-check-label" v-bind:for="'style_' + s">
-              {{ s }}
-            </label>
+          <div class="row mb-3">
+            <button type="button" class="btn btn-success" v-on:click="submit"
+              v-bind:disabled="isLoading">Generate</button>
           </div>
+          <div class="row mb-3">
+            <button type="button" class="btn btn-info" v-on:click="copyImageToClipboard" v-bind:disabled="isLoading || !image">{{
+              isCopyToClipboardSuccessfully ? 'Copied!' : 'Copy to Clipboard' }}</button>
+          </div>
+        </form>
+      </div>
+      <div class="col-12 col-sm-12 col-lg-8 col-xl-9 d-flex p-4">
+        <div class="flex-grow-1 d-flex justify-content-center align-items-center" style="min-width: 0;">
+          <canvas class="border border-secondary-subtle" v-bind:width="canvasWidth" v-bind:height="canvasHeight"
+            ref="canvas"></canvas>
         </div>
       </div>
-      <div class="row mb-3 form-floating">
-        <textarea class="form-control" placeholder="Description" v-model="description" id="description" rows="10"
-          @keyup.ctrl.enter="submit"></textarea>
-        <label for="description">Description</label>
-      </div>
-      <div class="row mb-3">
-        <button type="button" class="btn btn-success" v-on:click="submit" v-bind:disabled="isLoading">Generate</button>
-      </div>
-      <div class="row mb-3">
-        <button type="button" class="btn btn-info" v-on:click="copyImageToClipboard" v-bind:disabled="isLoading">{{
-          isCopyToClipboardSuccessfully ? 'Copied!' : 'Copy to Clipboard' }}</button>
-      </div>
-    </form>
-    <div class="d-flex justify-content-center align-items-center">
-      <canvas class="border border-secondary-subtle" ref="canvas" id="canvas" height="800px" width="800px"></canvas>
     </div>
   </div>
 </template>
 
 <script>
-const totalAttempts = 20;
+const totalAttempts = 30;
 export default {
   data() {
-    const styles = [
-      "UHD",
-      "KANDINSKY",
-      "DEFAULT",
-      "ANIME"
-    ];
     return {
       isLoading: false,
       status: "None",
       description: "",
-      styles,
+      styles: [
+        "UHD",
+        "KANDINSKY",
+        "DEFAULT",
+        "ANIME"
+      ],
       style: undefined,
       key: "",
       secret: "",
       isAPISettingsOpened: true,
       isCopyToClipboardSuccessfully: false,
       hasStoredKeys: false,
+      canvasHeight: 512,
+      canvasWidth: 512,
+      image: null,
+      imageSize: 1024,
     }
   },
+  computed: {
+    canvas: function () {
+      return this.$refs.canvas;
+    },
+  },
   mounted() {
-    this.canvas = this.$refs.canvas;
     this.loader = new Loader(this.canvas, totalAttempts);
     this.description = localStorage.getItem(DESCRIPTION_TOKEN) ?? "";
     this.style = localStorage.getItem(STYLE_TOKEN) ?? this.styles[0];
@@ -108,8 +129,26 @@ export default {
     this.secret = localStorage.getItem(SECRET_TOKEN) ?? "";
     this.isAPISettingsOpened = !(this.key || this.secret);
     this.updateHasStoredKeys();
+    window.addEventListener("resize", this.handleResize);
+    this.handleResize();
   },
   methods: {
+    beforeDestroy() {
+      window.removeEventListener("resize", this.handleResize);
+    },
+    handleResize: function () {
+      const oldSize = this.canvasWidth;
+      const newSize = Math.min(this.canvas.parentNode.offsetWidth, 800);
+      this.canvasHeight = newSize;
+      this.canvasWidth = newSize;
+      if (oldSize !== newSize) {
+        this.loader.resize();
+      }
+
+      if (this.image) {
+        debounce(() => this.drawImage(this.image), 100)();
+      }
+    },
     setLoading(value) {
       this.isLoading = value;
       value
@@ -141,6 +180,7 @@ export default {
       if (this.isLoading) {
         return;
       }
+      this.image = null;
       localStorage.setItem(DESCRIPTION_TOKEN, this.description);
       localStorage.setItem(STYLE_TOKEN, this.style);
       this.setLoading(true);
@@ -148,7 +188,8 @@ export default {
       const images = await this.checkImageStatus(uuid);
       this.setLoading(false);
       if (images) {
-        this.draw(images[0]);
+        this.image = await this.loadImage(images[0]);
+        this.drawImage(this.image);
       }
     },
     async getImageUUID(query, style) {
@@ -157,8 +198,8 @@ export default {
       form.append("params", new Blob([JSON.stringify({
         "type": "GENERATE",
         "style": style,
-        "width": 1024,
-        "height": 1024,
+        "width": this.imageSize,
+        "height": this.imageSize,
         "num_images": 1,
         "negativePromptUnclip": "яркие цвета, кислотность, высокая контрастность",
         "generateParams": {
@@ -201,25 +242,39 @@ export default {
 
       this.status = "ERROR";
     },
-    draw(base64Image) {
-      const ctx = this.canvas.getContext("2d");
-
-      const image = new Image();
-      image.onload = () => {
-        ctx.drawImage(image, 0, 0, image.width, image.height,
-          0, 0, this.canvas.width, this.canvas.height);
-      };
-      image.src = `data:image/png;base64, ${base64Image}`;
+    async loadImage(base64Image) {
+      return new Promise((resolve) => {
+        const image = new Image();
+        image.onload = () => {
+          resolve(image);
+        };
+        image.src = `data:image/png;base64, ${base64Image}`;
+      })
     },
-    copyImageToClipboard() {
+    drawImage(image) {
+      const ctx = this.canvas.getContext("2d");
+      ctx.drawImage(image, 0, 0, image.width, image.height,
+        0, 0, this.canvas.scrollWidth, this.canvas.scrollHeight);
+    },
+    async copyImageToClipboard() {
       try {
-        this.canvas.toBlob((blob) => {
-          navigator.clipboard.write([
-            new ClipboardItem({
-              'image/png': blob
-            }),
-          ]);
-        })
+        const blob = await new Promise((resolve) => {
+          const canvas = document.createElement("canvas");
+          canvas.width = this.image.width;
+          canvas.height = this.image.height;
+          const context = canvas.getContext("2d");
+          context.drawImage(this.image, 0, 0);
+
+          canvas.toBlob(blob => {
+            resolve(blob);
+          })
+        });
+
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            [blob.type]: blob,
+          }),
+        ]);
         this.copyImageToClipboardSuccess();
       } catch (error) {
         console.error(error);
@@ -235,14 +290,4 @@ export default {
 }
 </script>
 
-<style scoped>
-.content {
-  display: grid;
-  grid-template-columns: 340px auto;
-  column-gap: 24px;
-
-  min-width: 0;
-  min-height: 0;
-  height: 100%;
-}
-</style>
+<style scoped></style>

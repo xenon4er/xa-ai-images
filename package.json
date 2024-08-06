@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/xenon4er/xa-ai-images#readme",
   "dependencies": {
+    "lodash": "4.17.21",
     "vue": "^3.4.34"
   },
   "devDependencies": {
