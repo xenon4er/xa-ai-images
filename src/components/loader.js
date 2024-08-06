@@ -79,8 +79,6 @@ export class Loader {
     constructor(canvas, totalAttempts) {
         this.canvas = canvas;
         this.context = this.canvas.getContext("2d");
-        this.canvasWidth = this.canvas.width;
-        this.canvasHeight = this.canvas.height;
         this.totalAttempts = totalAttempts;
         this.attempt = 0;
 
@@ -90,6 +88,26 @@ export class Loader {
          * @private
          */
         this.animationId = null;
+    }
+
+    get canvasHeight() {
+        return this.canvas.scrollHeight;
+    }
+
+    get canvasWidth() {
+        return this.canvas.scrollWidth;
+    }
+
+    getFontSize(size) {
+        const fontSize = this.canvasWidth * size  / 800;
+        return `${fontSize|0}px`;
+    }
+
+    resize() {
+        if (this.animationId) {
+            this.hideLoading();
+            this.showLoading();
+        }
     }
 
     showLoading() {
@@ -111,7 +129,7 @@ export class Loader {
 
     drawAttempts = () => {
         this.context.fillStyle = "rgba(100 100 100 / 100%)";
-        this.context.font = "90px serif";
+        this.context.font = `${this.getFontSize(80)} system-ui`;
         this.context.textAlign = "center";
         this.context.strokeStyle = "rgba(10 10 10 / 100%)";
         const text = `Attempt ${this.attempt} out of ${this.totalAttempts}`;
