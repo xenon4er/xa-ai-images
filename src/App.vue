@@ -114,6 +114,8 @@ export default {
       canvasWidth: 512,
       image: null,
       imageSize: 1024,
+      modelId: null,
+      url: "https://api-key.fusionbrain.ai/key/api/v1",
     }
   },
   computed: {
@@ -192,21 +194,36 @@ export default {
         this.drawImage(this.image);
       }
     },
+    async getModelId() {
+      if (!this.modelId) {
+        const modelsIdReq = await fetch(`${this.url}/pipelines`, {
+            method: "GET",
+            headers: this.getAccessHeaders(),
+        });
+
+        const models = await modelsIdReq.json();
+        this.modelId = models[0].id;
+      }
+
+      return this.modelId;
+
+    },
     async getImageUUID(query, style) {
       const form = new FormData();
-      form.append("model_id", "4");
+      const modelId = await this.getModelId();
+      form.append("pipeline_id", modelId);
       form.append("params", new Blob([JSON.stringify({
         "type": "GENERATE",
         "style": style,
         "width": this.imageSize,
         "height": this.imageSize,
-        "num_images": 1,
-        "negativePromptUnclip": "яркие цвета, кислотность, высокая контрастность",
+        "numImages": 1,
+        "negativePromptDecoder": "яркие цвета, кислотность, высокая контрастность",
         "generateParams": {
           "query": query,
         }
       })], { type: 'application/json' }));
-      const imageReq = await fetch("https://api-key.fusionbrain.ai/key/api/v1/text2image/run", {
+      const imageReq = await fetch(`${this.url}/pipeline/run`, {
         method: "POST",
         body: form,
         headers: this.getAccessHeaders(),
@@ -220,15 +237,15 @@ export default {
     async checkImageStatus(uuid, attempts = totalAttempts, delay = 3000) {
       while (attempts > 0) {
         this.loader.setAttempt(totalAttempts - attempts + 1);
-        const req = await fetch(`https://api-key.fusionbrain.ai/key/api/v1/text2image/status/${uuid}`, {
+        const req = await fetch(`${this.url}/pipeline/status/${uuid}`, {
           method: "GET",
           headers: this.getAccessHeaders(),
         });
 
         const data = await req.json();
-        this.status = data.status;;
+        this.status = data.status;
         if (data.status == 'DONE') {
-          return data.images;
+          return data.result.files;
         }
 
         attempts -= 1;
